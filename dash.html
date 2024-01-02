@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #fff0e6; /* Cream color */
+    }
+
+    #localVideo {
+      display: block; /* Ensure it's displayed as a block element */
+      margin: 0 auto; /* Center it horizontally */
+      transform: scaleX(-1);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background-color: #f0f0f0;
+      margin-bottom: 20px;
+    }
+
+    .logout button,
+    .camera-toggle button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .body > div {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="camera-toggle">
+        <button id="cameraToggleButton">Turn Camera On</button>
+      </div>
+      <div class="logout">
+        <button id="logoutButton" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    <video id="localVideo" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const video = document.getElementById('localVideo');
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+      let isCameraOn = false;
+
+      // Access Camera
+      function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then((stream) => {
+            video.srcObject = stream;
+            isCameraOn = true;
+          })
+          .catch((error) => {
+            console.error('Error accessing camera:', error);
+          });
+      }
+
+      function stopCamera() {
+        const stream = video.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+          video.srcObject = null;
+          isCameraOn = false;
+        }
+      }
+
+      function toggleCamera() {
+        if (isCameraOn) {
+          stopCamera();
+          document.getElementById('cameraToggleButton').textContent = 'Turn Camera On';
+        } else {
+          startCamera();
+          document.getElementById('cameraToggleButton').textContent = 'Turn Camera Off';
+        }
+      }
+
+      // Capture Frames
+      function captureFrame(timestamp) {
+        if (isCameraOn) {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataURL = canvas.toDataURL('image/jpeg');
+
+          // Send Frames using HTTP POST requests
+          sendFramesUsingHTTP(dataURL);
+        }
+
+        requestAnimationFrame(captureFrame);
+      }
+
+      // Send Frames using HTTP POST requests
+      function sendFramesUsingHTTP(dataURL) {
+    const username = getQueryVariable('username'); // Function to extract username from URL
+    const payload = {
+        frame: dataURL.split(',')[1],
+        username: username
+    };
+
+    fetch('https://cc5b-2401-4900-1c27-125e-d483-2ecd-26e4-70b.ngrok-free.app/upload', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    })
+    .then((response) => response.json())
+    .then((data) => console.log('Server response:', data))
+    .catch((error) => console.error('Error sending frames:', error));
+}
+
+// Function to extract query parameters from URL
+function getQueryVariable(variable) {
+    const query = window.location.search.substring(1);
+    const vars = query.split('&');
+    for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split('=');
+        if (pair[0] === variable) {
+            return pair[1];
+        }
+    }
+    return null;
+}
+      document.getElementById('cameraToggleButton').addEventListener('click', toggleCamera);
+      captureFrame();
+      function logout() {
+        window.location.href = './index.html';
+      }
+
+      document.getElementById('logoutButton').addEventListener('click', logout);
+
+      captureFrame();
+
+      // Prevent back navigation
+      history.replaceState(null, null, window.location.href);
+      window.addEventListener('popstate', function (event) {
+        history.pushState(null, null, window.location.href);
+      });
+
+        window.addEventListener('beforeunload', function (event) {
+            event.returnValue = '';
+        });
+    });
+  </script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyAger6RF-uSEDSjjG-jgaQeF2zg2Kr4kOY",
+      authDomain: "aslwp-9086f.firebaseapp.com",
+      projectId: "aslwp-9086f",
+      storageBucket: "aslwp-9086f.appspot.com",
+      messagingSenderId: "333668185709",
+      appId: "1:333668185709:web:df534bd5f87aa949c0f164",
+      measurementId: "G-HC88RPBDYV"
+    };
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+</body>
+</html>
