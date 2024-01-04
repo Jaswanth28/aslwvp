@@ -1,104 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #f5f5dc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .login-container {
-      position: relative; 
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 400px;
-      text-align: center;
-    }
-
-    .login-container::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.4); 
-      backdrop-filter: blur(10px);
-      z-index: -1;
-      border-radius: 10px; 
-    }
-
-    #avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #4caf50; 
-      color: white;
-      padding: 8px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 50%;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    #signup-link {
-      margin-top: 10px;
-      color: #333;
-      text-decoration: none;
-      font-size: 14px;
-      display: block;
-    }
-  </style>
-  <title>Login Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="./style/style.css">
+    <title>Login</title>
 </head>
 <body>
 
-<div class="login-container">
-  <img id="avatar" src="./images/avatar.jpg" alt="User Avatar">
-  <h2>Login</h2>
-  <form id="login-form">
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button type="button" onclick="login()">Login</button>
-  </form>
-  <a href="./signup.html" id="signup-link">New signup Here!!</a>
-</div>
-<script>
-    function login() {
+    <div class="container" id="container">
+        <div class="form-container sign-up">
+            <form>
+                <h1>Create Account</h1>
+                <input type="text" id="susername" placeholder="Username" required>
+                <input type="email" id="semail" placeholder="Email" required>
+                <input type="password" id="spassword" placeholder="Password" required>
+                <button type="button" onclick="signup()">SignUp</button>
+            </form>
+        </div>
+        <div class="form-container sign-in">
+            <form>
+                <h1>Login</h1>
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="button" onclick="login()">Login</button>
+            </form>
+        </div>
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Login to access our features</p>
+                    <button class="hidden" id="login">Login</button>
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Hello,</h1>
+                    <p>Create an account to use our features</p>
+                    <button class="hidden" id="register">SignUp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./style/script.js"></script>
+    <script>
+      const uri='https://4299-2401-4900-1c27-125e-b1a8-7afb-a04f-8fbe.ngrok-free.app'
+        function signup() {
+          const username = document.getElementById('susername').value;
+          const email = document.getElementById('semail').value;
+          const password = document.getElementById('spassword').value;
+          if (!username || !email || !password) {
+            alert('Signup failed. Please fill in all fields.');
+            return;
+          }
+          const payload = {
+            username: username,
+            email: email,
+            password: password
+          };
+          // const uril='http:127.0.0.1:2819'
+          fetch(uri+'/sign-up', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          })
+          .then(response => {
+            if (response.status === 200) {
+              return response.json();
+            } else {
+              throw new Error(`Signup failed with status: ${response.status}`);
+            }
+          })
+          .then(data => {
+            if (data.status === 'success' && data.code === 113) {
+                document.getElementById('spassword').value = '';
+                document.getElementById('semail').value = '';
+                document.getElementById('susername').value = '';
+                container.classList.remove("active");
+            } else if (data.status === 'error' && data.code === 117) {
+              alert('Signup failed. Username already exists.');
+              document.getElementById('spassword').value = '';
+              document.getElementById('semail').value = '';
+              document.getElementById('susername').value = '';
+            } else {
+              throw new Error('Signup failed. Unexpected response format.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error.message);
+            alert(error.message);
+            document.getElementById('susername').value = '';
+            document.getElementById('semail').value = '';
+            document.getElementById('spassword').value = '';
+          });
+        }
+        function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const payload = {
       username: username,
       password: password
     };
-    // const uri='http:127.0.0.1:2819'
-    fetch('https://cc5b-2401-4900-1c27-125e-d483-2ecd-26e4-70b.ngrok-free.app/lgn', {
+    fetch(uri+'/lgn', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,10 +115,11 @@
     .then(response => response.json())
     .then(data => {
       if (data.code === 200) {
-        window.location.href = `./dash.html?username=${username}`;
-        history.pushState(null, null, `./dash.html?username=${username}`);
+        stkey=data.stkey
+        window.location.href = `./dash.html?stkey=${stkey}`;
+        history.pushState(null, null, `./dash.html?stkey=${stkey}`);
         window.addEventListener('popstate', function (event) {
-        window.location.href = `./dash.html?username=${username}`;
+        window.location.href = `./dash.html?stkey=${stkey}`;
       });
       } else if (data.code === 401) {
         alert(data.message);
@@ -127,21 +135,7 @@
       alert(error.message);
     });
   }
-</script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-  const firebaseConfig = {
-    apiKey: "AIzaSyAger6RF-uSEDSjjG-jgaQeF2zg2Kr4kOY",
-    authDomain: "aslwp-9086f.firebaseapp.com",
-    projectId: "aslwp-9086f",
-    storageBucket: "aslwp-9086f.appspot.com",
-    messagingSenderId: "333668185709",
-    appId: "1:333668185709:web:df534bd5f87aa949c0f164",
-    measurementId: "G-HC88RPBDYV"
-  };
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+        </script>
 </body>
+
 </html>
